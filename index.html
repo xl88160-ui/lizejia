@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XLight | 科技爱好者</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #050505;
+            color: #ffffff;
+            font-family: Arial, "Microsoft YaHei", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+        }
+
+        .avatar {
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 25px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            box-shadow: 0 0 30px rgba(255,255,255,0.15);
+        }
+
+        h1 {
+            font-size: 48px;
+            letter-spacing: 6px;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            color: #999;
+            font-size: 16px;
+            margin-bottom: 35px;
+        }
+
+        .intro {
+            border: 1px solid #222;
+            border-radius: 18px;
+            padding: 25px;
+            background: #0d0d0d;
+            margin-bottom: 20px;
+            line-height: 1.9;
+        }
+
+        .intro span {
+            color: #fff;
+        }
+
+        .skills {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 25px 0;
+        }
+
+        .tag {
+            border: 1px solid #333;
+            border-radius: 30px;
+            padding: 8px 16px;
+            color: #bbb;
+            font-size: 14px;
+            background: #0b0b0b;
+        }
+
+        .button {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 13px 28px;
+            border: 1px solid #555;
+            border-radius: 30px;
+            color: white;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .button:hover {
+            background: white;
+            color: black;
+        }
+
+        footer {
+            margin-top: 45px;
+            color: #555;
+            font-size: 13px;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 38px;
+                letter-spacing: 4px;
+            }
+
+            .avatar {
+                width: 90px;
+                height: 90px;
+                font-size: 30px;
+            }
+
+            .intro {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <div class="avatar">XL</div>
+
+        <h1>XLight</h1>
+
+        <p class="subtitle">
+            科技爱好者 & 编程学习者
+        </p>
+
+        <section class="intro">
+            <p>
+                热爱探索最新的科技产品、AI 技术与编程。
+            </p>
+            <p>
+                正在从零开始学习编程，记录自己的学习与探索之旅。
+            </p>
+        </section>
+
+        <div class="skills">
+            <span class="tag">AI</span>
+            <span class="tag">科技</span>
+            <span class="tag">编程</span>
+            <span class="tag">Android</span>
+            <span class="tag">Web</span>
+        </div>
+
+        <a class="button"
+           href="https://github.com/x188160-ui">
+            GitHub
+        </a>
+
+        <footer>
+            © 2026 XLight · Built with curiosity
+        </footer>
+
+    </main>
+
+</body>
+</html>
