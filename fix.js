@@ -1,0 +1,40 @@
+(()=>{
+const URL="https://uvmojhlpmrpjpfcupwbk.supabase.co";
+const KEY="sb_publishable_4GCp4gl6N91d_J9z_VuooA_JVNYZCVG";
+const cid=()=>{let x=localStorage.getItem("class_moments_client");if(!x){x=crypto.randomUUID();localStorage.setItem("class_moments_client",x)}return x};
+const original=window.supabase.createClient.bind(window.supabase);
+window.supabase.createClient=(url,key,opts={})=>{opts={...opts,global:{...(opts.global||{}),headers:{...((opts.global||{}).headers||{}),"x-class-client-id":cid()}}};return original(url,key,opts)};
+function esc(s){return String(s??"").replace(/[&<>\"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+function fmt(s){return new Date(s).toLocaleString("zh-CN",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"})}
+function setup(){
+ const sup=window.supabase.createClient(URL,KEY);
+ document.querySelectorAll("#class-admin-btn").forEach((b,i)=>{if(i) b.remove()});
+ let btn=document.getElementById("class-admin-btn");
+ if(!btn){btn=document.createElement("button");btn.id="class-admin-btn";btn.textContent="⚙️ 管理员";document.body.appendChild(btn)}
+ Object.assign(btn.style,{position:"fixed",right:"18px",bottom:"18px",zIndex:99999,border:0,borderRadius:"999px",padding:"11px 16px",background:"#111827",color:"#fff",fontWeight:"700",cursor:"pointer",boxShadow:"0 8px 28px #0002"});
+ const old=document.getElementById("class-admin-modal");if(old)old.remove();
+ const modal=document.createElement("div");modal.id="class-admin-modal";modal.innerHTML=`<div id="class-admin-card"><button id="admin-x">✕</button><h3>班级管理员</h3><div id="admin-body"></div></div>`;document.body.appendChild(modal);
+ const st=document.createElement("style");st.textContent=`#class-admin-modal{position:fixed;inset:0;z-index:100000;background:#0008;display:none;align-items:center;justify-content:center;padding:20px}#class-admin-card{width:min(94vw,620px);max-height:86vh;overflow:auto;background:#fff;border-radius:20px;padding:22px;box-shadow:0 20px 60px #0005}#admin-x{float:right;border:0;background:#f3f4f6;border-radius:9px;padding:7px 10px;cursor:pointer}#admin-body input{box-sizing:border-box;width:100%;padding:12px;margin:7px 0;border:1px solid #ddd;border-radius:10px}#admin-body button{border:0;border-radius:9px;padding:9px 12px;margin:4px;cursor:pointer}.admin-primary{background:#111827;color:#fff}.admin-row{border:1px solid #eee;border-radius:12px;padding:12px;margin:9px 0}.admin-row p{white-space:pre-wrap}.admin-comment{display:flex;gap:8px;padding:7px;background:#f7f7f7;border-radius:8px;margin-top:6px}.admin-comment button{margin-left:auto}.my-delete{margin-top:8px;border:0;border-radius:8px;padding:6px 9px;background:#fee2e2;color:#991b1b;cursor:pointer;font-size:12px}`;document.head.appendChild(st);
+ const body=modal.querySelector("#admin-body");
+ btn.onclick=async()=>{modal.style.display="flex";await renderAdmin()};modal.querySelector("#admin-x").onclick=()=>modal.style.display="none";modal.onclick=e=>{if(e.target===modal)modal.style.display="none"};
+ async function renderAdmin(){
+  const {data:{user}}=await sup.auth.getUser();
+  if(!user){body.innerHTML=`<p><b>管理员登录</b></p><p>请输入管理员邮箱，验证码会直接发到邮箱，不再依赖跳转链接。</p><input id="admin-email" value="3422306811@qq.com" readonly><button class="admin-primary" id="send-code">发送验证码</button><div id="admin-msg"></div><input id="admin-code" inputmode="numeric" maxlength="6" placeholder="收到的6位验证码"><button class="admin-primary" id="verify-code">登录管理员</button>`;body.querySelector("#send-code").onclick=async()=>{const r=await sup.auth.signInWithOtp({email:"3422306811@qq.com",options:{shouldCreateUser:true}});body.querySelector("#admin-msg").textContent=r.error?"发送失败："+r.error.message:"验证码已发送，请查收邮箱。"};body.querySelector("#verify-code").onclick=async()=>{const code=body.querySelector("#admin-code").value.trim();if(!/^\d{6}$/.test(code)){body.querySelector("#admin-msg").textContent="请输入6位验证码";return}const r=await sup.auth.verifyOtp({email:"3422306811@qq.com",token:code,type:"email"});if(r.error){body.querySelector("#admin-msg").textContent="登录失败："+r.error.message;return}await renderAdmin()};return}
+  if((user.email||"").toLowerCase()!=="3422306811@qq.com"){await sup.auth.signOut();body.innerHTML="<p>当前账号不是班级管理员。</p>";return}
+  const claim=await sup.rpc("claim_class_admin");if(claim.error){body.innerHTML="<p>管理员授权失败："+esc(claim.error.message)+"</p>";return}
+  const {data:admin}=await sup.from("class_admins").select("user_id").eq("user_id",user.id).maybeSingle();if(!admin){body.innerHTML="<p>管理员授权未完成，请重新登录。</p>";return}
+  const {data:posts,error}=await sup.from("posts").select("id,user_name,content,pinned,hidden,created_at,post_comments(id,user_name,content,hidden,created_at)").order("created_at",{ascending:false}).limit(100);if(error){body.innerHTML="<p>读取动态失败："+esc(error.message)+"</p>";return}
+  body.innerHTML=`<p>已登录：${esc(user.email)} ✅</p><button id="admin-refresh">刷新</button><button id="admin-logout">退出登录</button><hr>${(posts||[]).map(p=>`<div class="admin-row"><b>${esc(p.user_name)}</b> <small>${fmt(p.created_at)}</small>${p.hidden?" 🚫已隐藏":""}<p>${esc(p.content)}</p><button data-pin="${p.id}">${p.pinned?"取消置顶":"置顶"}</button><button data-hide="${p.id}">${p.hidden?"恢复显示":"隐藏"}</button><button data-del="${p.id}">删除动态</button><div>${(p.post_comments||[]).map(c=>`<div class="admin-comment"><span><b>${esc(c.user_name)}</b>：${esc(c.content)}</span><button data-cdel="${c.id}">删除评论</button></div>`).join("")}</div></div>`).join("")||"暂无动态"}`;
+  body.querySelector("#admin-refresh").onclick=renderAdmin;body.querySelector("#admin-logout").onclick=async()=>{await sup.auth.signOut();renderAdmin()};
+  body.querySelectorAll("[data-pin]").forEach(b=>b.onclick=async()=>{const p=posts.find(x=>x.id===b.dataset.pin);const r=await sup.from("posts").update({pinned:!p.pinned}).eq("id",p.id);if(r.error)alert(r.error.message);renderAdmin()});
+  body.querySelectorAll("[data-hide]").forEach(b=>b.onclick=async()=>{const p=posts.find(x=>x.id===b.dataset.hide);const r=await sup.from("posts").update({hidden:!p.hidden}).eq("id",p.id);if(r.error)alert(r.error.message);renderAdmin()});
+  body.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(!confirm("确定删除这条动态吗？"))return;const r=await sup.from("posts").delete().eq("id",b.dataset.del);if(r.error)alert("删除失败："+r.error.message);renderAdmin()});
+  body.querySelectorAll("[data-cdel]").forEach(b=>b.onclick=async()=>{if(!confirm("确定删除这条评论吗？"))return;const r=await sup.from("post_comments").delete().eq("id",b.dataset.cdel);if(r.error)alert("删除失败："+r.error.message);renderAdmin()});
+ }
+ async function addOwnDelete(){
+  const {data:mine}=await sup.from("posts").select("id").eq("author_client_id",cid()).limit(100);const ids=new Set((mine||[]).map(x=>x.id));document.querySelectorAll(".moment-post[data-post]").forEach(card=>{if(!ids.has(card.dataset.post)||card.querySelector(".my-delete"))return;const b=document.createElement("button");b.className="my-delete";b.textContent="🗑️ 删除我的动态";b.onclick=async()=>{if(!confirm("确定删除你自己的这条动态吗？"))return;const r=await sup.from("posts").delete().eq("id",card.dataset.post);if(r.error)alert("删除失败："+r.error.message);else card.remove()};card.querySelector(".moment-main")?.appendChild(b)});
+ }
+ const mo=new MutationObserver(()=>addOwnDelete());mo.observe(document.body,{childList:true,subtree:true});setTimeout(addOwnDelete,1200);
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",setup);else setup();
+})();
